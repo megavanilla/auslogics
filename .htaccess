@@ -1,0 +1,49 @@
+#Кодировка по умолчанию
+AddDefaultCharset UTF-8
+
+#Запрет на просмотр директорий
+Options -Indexes +FollowSymLinks
+
+#Отключаем диалог загрузки для следующих файлов
+#В этом случае файлы автоматически будут загружаться посетителю
+AddType application/octet-stream .exe
+
+<IfModule mod_rewrite.c>
+	
+    RewriteEngine On
+    RewriteBase /
+
+    #Блокируем все ссылки, содержащие script
+    RewriteCond %{QUERY_STRING} (\<|%3C).*script.*(\>|%3E) [NC,OR]
+    
+    #Блокируем все скрипты, которые пытаются изменить переменные PHP Globals:
+    RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+    
+    #Блокируем все скрипты, которые пытаются изменить переменную _REQUEST:
+    RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2})
+    
+    #Перенаправляем все подобные на страницу с ошибкой 403 — запрещено
+    RewriteRule ^(.*)$ index.php [F,L]
+    
+    #Переадресация адреса каталога без слэша на со слэшом
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_URI} !(.*\..*|.*/)$
+    RewriteRule ^(.*)$ $1/ [R=301,L]
+
+    #Переадресация с УРЛ-ов каталогов сайта index.php, index.html на каталог
+    RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /index\.php\ HTTP/
+    RewriteRule ^index\.php$ http://%{HTTP_HOST} [R=301,L]
+
+    RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /index\.html\ HTTP/
+    RewriteRule ^index\.html$ http://%{HTTP_HOST} [R=301,L]
+
+
+    #Перенаправляем на нужный exe файл
+    #
+    #Если нужно перенаправление только для все exe файлов
+    RewriteRule ^files(.*).exe$ /test_1.php [L,R=301]
+    #Если нужно перенаправление только для все файлов
+    #RewriteRule ^files(.*)$ /test_1.php [L,R=301]
+	
+	
+</IfModule>
